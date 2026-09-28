@@ -1,0 +1,338 @@
+@import "tailwindcss";
+@source not "../../.swarm";
+@source not "../../.claude-flow";
+
+/* ==========================================================================
+   KAIZEN · sistema de diseño "groovy 70s sunburst"
+   Temas: blanco (default) · negro · cafe  →  <html data-theme="...">
+   ========================================================================== */
+
+:root,
+[data-theme="blanco"] {
+  --background: #fff8ec;
+  --background-2: #fdeccf;
+  --surface: #fffdf8;
+  --surface-2: #fbf1dd;
+  --foreground: #2a1a10;
+  --muted: #7a6350;
+  --border: #ecd9bb;
+  --ink: #2a1a10; /* color de la sombra tipo sticker */
+
+  --accent: #ee6a1a;
+  --accent-foreground: #fffaf0;
+  --mente: #d99a00;
+  --fisico: #ee6a1a;
+  --espiritual: #c8206a;
+  --success: #5a7030;
+  --danger: #c0341d;
+
+  --ray-a: rgb(240 177 11 / 0.11);
+  --ray-b: rgb(238 106 26 / 0.07);
+  --grain-opacity: 0.06;
+  color-scheme: light;
+}
+
+[data-theme="negro"] {
+  --background: #0d0b09;
+  --background-2: #1a1410;
+  --surface: #17130f;
+  --surface-2: #211b15;
+  --foreground: #fbf1dd;
+  --muted: #a8977f;
+  --border: #33291f;
+  --ink: #4a3b2c;
+
+  --accent: #ff7a2b;
+  --accent-foreground: #140c06;
+  --mente: #f5b921;
+  --fisico: #ff7a2b;
+  --espiritual: #ec3d88;
+  --success: #9dbb5c;
+  --danger: #ff6a4d;
+
+  --ray-a: rgb(240 177 11 / 0.07);
+  --ray-b: rgb(200 32 106 / 0.05);
+  --grain-opacity: 0.09;
+  color-scheme: dark;
+}
+
+[data-theme="cafe"] {
+  --background: #2b1d14;
+  --background-2: #3a281b;
+  --surface: #3a291d;
+  --surface-2: #473324;
+  --foreground: #fbeed6;
+  --muted: #c9ac8c;
+  --border: #5a4230;
+  --ink: #140c07;
+
+  --accent: #f28a3c;
+  --accent-foreground: #221409;
+  --mente: #f5c13c;
+  --fisico: #f28a3c;
+  --espiritual: #ee5a98;
+  --success: #a9c46a;
+  --danger: #ff7b5c;
+
+  --ray-a: rgb(245 193 60 / 0.08);
+  --ray-b: rgb(242 138 60 / 0.06);
+  --grain-opacity: 0.1;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-mente: var(--mente);
+  --color-fisico: var(--fisico);
+  --color-espiritual: var(--espiritual);
+  /* colores fijos de marca (no cambian con el tema) */
+  --color-mostaza: #f0b10b;
+  --color-oliva: #5a7030;
+  --color-magenta: #c8206a;
+  --color-naranja: #ee6a1a;
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-groovy);
+  --font-mono: var(--font-numbers);
+
+  --radius-blob: 1.75rem;
+  --shadow-sticker: 4px 4px 0 0 var(--ink);
+  --shadow-sticker-sm: 2px 2px 0 0 var(--ink);
+  --shadow-sticker-lg: 6px 6px 0 0 var(--ink);
+
+  --animate-rise: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-spin-slow: spin 60s linear infinite;
+  --animate-pop: pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.85);
+    }
+    60% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- base */
+
+html {
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+body {
+  background-color: var(--background);
+  /* rayos de sol muy suaves desde arriba */
+  background-image:
+    linear-gradient(to bottom, transparent 0, var(--background) 75vh),
+    repeating-conic-gradient(from 0deg at 50% -10%, var(--ray-a) 0deg 6deg, transparent 6deg 18deg),
+    radial-gradient(ellipse 120% 70% at 50% -10%, var(--background-2), transparent 70%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01";
+}
+
+/* grano analogico sobre todo */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+::selection {
+  background: var(--mente);
+  color: #2a1a10;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* ------------------------------------------------------- componentes */
+
+@layer components {
+  /* Titulos groovy */
+  .display {
+    font-family: var(--font-groovy), serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.05;
+  }
+
+  /* Tarjeta tipo sticker: borde de tinta + sombra desplazada */
+  .card {
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-blob);
+    box-shadow: var(--shadow-sticker);
+  }
+  .card-soft {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-blob);
+  }
+
+  /* Botones */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+    padding: 0.55rem 1.15rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-sticker-sm);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background-color 0.2s ease;
+    cursor: pointer;
+  }
+  .btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 0 var(--ink);
+  }
+  .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 var(--ink);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--foreground);
+  }
+  .btn-ghost {
+    border-color: transparent;
+    box-shadow: none;
+    background: transparent;
+    color: var(--muted);
+  }
+  .btn-ghost:hover {
+    background: var(--surface-2);
+    color: var(--foreground);
+    box-shadow: none;
+  }
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  /* Chips / pills */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: var(--surface-2);
+    color: var(--foreground);
+    border: 1.5px solid var(--border);
+  }
+
+  /* Inputs */
+  .field {
+    width: 100%;
+    border-radius: 1rem;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--foreground);
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease;
+  }
+  .field::placeholder {
+    color: var(--muted);
+    opacity: 0.8;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Numero grande de marcador */
+  .stat {
+    font-family: var(--font-numbers), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  /* Divisor ondulado */
+  .wavy {
+    height: 12px;
+    background: var(--border);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='12'><path d='M0 6 Q10 0 20 6 T40 6' fill='none' stroke='black' stroke-width='3'/></svg>")
+      repeat-x center / 40px 12px;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='12'><path d='M0 6 Q10 0 20 6 T40 6' fill='none' stroke='black' stroke-width='3'/></svg>")
+      repeat-x center / 40px 12px;
+  }
+
+  /* Barra de progreso de cuatro colores de marca */
+  .groovy-bar {
+    background: linear-gradient(90deg, #f0b10b, #ee6a1a 40%, #c8206a 75%, #5a7030);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
