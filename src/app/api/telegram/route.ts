@@ -67,7 +67,7 @@ async function handleText(chatId: number, text: string) {
 
 async function linkByEmail(chatId: number, email: string) {
   const admin = createAdminClient();
-  const { data } = await admin.auth.admin.listUsers({ perPage: 50 });
+  const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const user = data?.users.find((u) => u.email?.toLowerCase() === email);
   if (!user) {
     return send(chatId, "No encontré ese correo en el reto. Revisa que sea el mismo con el que entras a la app.");
@@ -162,6 +162,11 @@ async function dayView(userId: string, date: string): Promise<{ text: string; re
   }
 
   const admin = createAdminClient();
+  const { data: profile } = await admin.from("profiles").select("active").eq("id", userId).maybeSingle();
+  if (profile && !profile.active) {
+    return { text: "Tu participación está en pausa ⏸️\nVuelve al reto desde la app, en Mis retos." };
+  }
+
   const [{ data: challenges }, { data: logs }] = await Promise.all([
     admin.from("challenges").select("*").eq("user_id", userId).eq("active", true).order("created_at"),
     admin.from("daily_logs").select("challenge_id, completed").eq("user_id", userId).eq("log_date", date),

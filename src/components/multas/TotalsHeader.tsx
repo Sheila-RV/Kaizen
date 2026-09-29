@@ -37,6 +37,9 @@ export function TotalsHeader({
               <div className="flex items-center justify-between gap-2">
                 <p className="display text-lg">
                   {profile.avatar_emoji} {profile.display_name}
+                  {!profile.active && (
+                    <span className="chip ml-2 align-middle border-danger/40 bg-danger/10 text-danger">En pausa</span>
+                  )}
                 </p>
                 <HandCoins className="size-5 text-muted" strokeWidth={2} aria-hidden />
               </div>

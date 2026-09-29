@@ -36,6 +36,18 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/retos");
 }
 
+/** Pausa o reanuda mi participacion en el reto. Mis multas anteriores se conservan. */
+export async function setParticipation(active: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.from("profiles").update({ active }).eq("id", user.id);
+  revalidatePath("/", "layout");
+}
+
 export async function createChallenge(formData: FormData) {
   const supabase = await createClient();
   const {

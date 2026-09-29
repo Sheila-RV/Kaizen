@@ -8,6 +8,7 @@ import { Sun } from "@/components/ui/brand";
 import { DayRing } from "@/components/hoy/day-ring";
 import { DayPanel } from "@/components/hoy/day-panel";
 import { BestieToday } from "@/components/hoy/bestie-today";
+import { ParticipationCard } from "@/components/retos/participation-card";
 
 export default async function HoyPage() {
   const user = await getUser();
@@ -37,7 +38,10 @@ export default async function HoyPage() {
     supabase.from("daily_logs").select("*").in("log_date", [today, yesterday]),
   ]);
 
-  const bestie = (profiles ?? []).find((p) => p.id !== user.id) ?? null;
+  const me = (profiles ?? []).find((p) => p.id === user.id);
+  const iAmPaused = me ? !me.active : false;
+  // Las demas personas activas; quien pauso su participacion no aparece.
+  const others = (profiles ?? []).filter((p) => p.id !== user.id && p.active);
   const allChallenges: Challenge[] = challenges ?? [];
   const allLogs: DailyLog[] = logs ?? [];
 
@@ -49,8 +53,6 @@ export default async function HoyPage() {
   const logsFor = (date: string, userId: string) => allLogs.filter((l) => l.log_date === date && l.user_id === userId);
   const todayLogs = logsFor(today, user.id);
 
-  const bestieChallengesToday = bestie ? allChallenges.filter((c) => c.user_id === bestie.id && appliesOn(c, today)) : [];
-  const bestieDoneToday = bestie ? logsFor(today, bestie.id).filter((l) => l.completed).length : 0;
 
   // Progreso de hoy, total y por categoria, para el anillo del hero.
   const logByChallenge = new Map(todayLogs.map((l) => [l.challenge_id, l]));
@@ -95,7 +97,7 @@ export default async function HoyPage() {
           </div>
         </div>
 
-        {!allDoneToday && pendingToday > 0 && (
+        {!iAmPaused && !allDoneToday && pendingToday > 0 && (
           <p className="chip relative mt-5 w-full justify-center gap-2 border-danger bg-danger/10 py-2 text-sm text-danger sm:w-auto">
             <TriangleAlert className="size-4 shrink-0" aria-hidden />
             Te falta{pendingToday === 1 ? "" : "n"} {pendingToday} reto{pendingToday === 1 ? "" : "s"} hoy · te arriesgas a {pendingToday}×{PENALTY_BS} Bs
@@ -103,8 +105,21 @@ export default async function HoyPage() {
         )}
       </section>
 
-      {bestie && (
-        <BestieToday bestieId={bestie.id} name={bestie.display_name} emoji={bestie.avatar_emoji} done={bestieDoneToday} total={bestieChallengesToday.length} />
+      {iAmPaused && <ParticipationCard active={false} />}
+
+      {others.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {others.map((p) => (
+            <BestieToday
+              key={p.id}
+              bestieId={p.id}
+              name={p.display_name}
+              emoji={p.avatar_emoji}
+              done={logsFor(today, p.id).filter((l) => l.completed).length}
+              total={allChallenges.filter((c) => c.user_id === p.id && appliesOn(c, today)).length}
+            />
+          ))}
+        </div>
       )}
 
       {myChallenges.length === 0 ? (

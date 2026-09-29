@@ -31,7 +31,8 @@ export default async function CalendarioPage({ searchParams }: Props) {
     supabase.from("daily_logs").select("*"),
   ]);
 
-  const people = profiles ?? [];
+  // Quien pauso su participacion no aparece (salvo yo).
+  const people = (profiles ?? []).filter((p) => p.active || p.id === user.id);
   const allChallenges = challenges ?? [];
   const allLogs = logs ?? [];
   const validSelectedDay = selectedDay && dates.includes(selectedDay) ? selectedDay : undefined;

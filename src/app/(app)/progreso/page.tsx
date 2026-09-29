@@ -19,8 +19,8 @@ export default async function ProgresoPage() {
     supabase.from("body_metrics").select("*").order("measured_on"),
   ]);
 
-  // Yo primero, siempre.
-  const orderedProfiles = ([...(profiles ?? [])] as Profile[]).sort((a, b) =>
+  // Yo primero, siempre. Quien pauso su participacion no aparece (salvo yo).
+  const orderedProfiles = ((profiles ?? []) as Profile[]).filter((p) => p.active || p.id === user.id).sort((a, b) =>
     a.id === user.id ? -1 : b.id === user.id ? 1 : 0,
   );
   const byUser = groupMetricsByUser((metrics ?? []) as BodyMetric[]);

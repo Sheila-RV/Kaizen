@@ -18,7 +18,7 @@ export function ProfileCard({ profile, editable }: { profile: Profile | null; ed
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-border text-2xl">
           🐣
         </span>
-        Tu bestie todavía no tiene perfil.
+        Todavía no hay nadie más en el reto.
       </div>
     );
   }

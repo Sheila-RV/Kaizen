@@ -20,13 +20,14 @@ export default async function DueloPage() {
     supabase.from("penalties").select("*"),
   ]);
 
-  const people = profiles ?? [];
+  // Solo quienes participan; quien pauso no compite (sus multas siguen en /multas).
+  const people = (profiles ?? []).filter((p) => p.active);
   if (people.length < 2) {
     return (
       <div className="card-soft p-8 text-center animate-rise">
         <Sun size={56} className="mx-auto mb-3 opacity-80" />
         <p className="display text-xl">Todavía falta un jugador</p>
-        <p className="mt-1 text-sm text-muted">Falta que tu bestie se una para ver el duelo.</p>
+        <p className="mt-1 text-sm text-muted">Se necesitan al menos dos personas activas para ver el duelo.</p>
       </div>
     );
   }
@@ -55,7 +56,7 @@ export default async function DueloPage() {
 
       <div>
         <h1 className="display text-center text-3xl sm:text-4xl">El Duelo</h1>
-        <p className="mt-1 text-center text-sm text-muted">100 días, dos besties, un ganador.</p>
+        <p className="mt-1 text-center text-sm text-muted">100 días, un solo ganador.</p>
       </div>
 
       {tie ? (

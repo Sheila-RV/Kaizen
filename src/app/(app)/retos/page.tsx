@@ -4,6 +4,7 @@ import { getUser, createClient } from "@/lib/supabase/server";
 import type { Challenge, Profile } from "@/lib/types";
 import { Sun } from "@/components/ui/brand";
 import { ProfileCard } from "@/components/retos/profile-card";
+import { ParticipationCard } from "@/components/retos/participation-card";
 import { ChallengesSection } from "@/components/retos/challenges-section";
 import { Templates } from "@/components/retos/templates";
 
@@ -22,10 +23,10 @@ export default async function RetosPage() {
   const allChallenges = (challenges ?? []) as Challenge[];
 
   const myProfile = allProfiles.find((p) => p.id === user.id) ?? null;
-  const bestieProfile = allProfiles.find((p) => p.id !== user.id) ?? null;
+  // Las demas personas activas; quien pauso su participacion no aparece.
+  const others = allProfiles.filter((p) => p.id !== user.id && p.active);
 
   const myChallenges = allChallenges.filter((c) => c.user_id === user.id);
-  const bestieChallenges = allChallenges.filter((c) => c.user_id !== user.id);
 
   return (
     <div className="relative space-y-8 pb-16">
@@ -46,8 +47,18 @@ export default async function RetosPage() {
 
       <section className="animate-rise grid gap-4 sm:grid-cols-2" style={{ animationDelay: "80ms" }}>
         <ProfileCard profile={myProfile} editable />
-        <ProfileCard profile={bestieProfile} editable={false} />
+        {others.length === 0 ? (
+          <ProfileCard profile={null} editable={false} />
+        ) : (
+          others.map((p) => <ProfileCard key={p.id} profile={p} editable={false} />)
+        )}
       </section>
+
+      {myProfile && (
+        <div className="animate-rise" style={{ animationDelay: "120ms" }}>
+          <ParticipationCard active={myProfile.active} />
+        </div>
+      )}
 
       <div className="animate-rise" style={{ animationDelay: "160ms" }}>
         <Templates />
@@ -56,9 +67,15 @@ export default async function RetosPage() {
       <div className="animate-rise" style={{ animationDelay: "240ms" }}>
         <ChallengesSection title="Mis retos" challenges={myChallenges} editable />
       </div>
-      <div className="animate-rise" style={{ animationDelay: "320ms" }}>
-        <ChallengesSection title="Retos de tu bestie" challenges={bestieChallenges} editable={false} />
-      </div>
+      {others.map((p) => (
+        <div key={p.id} className="animate-rise" style={{ animationDelay: "320ms" }}>
+          <ChallengesSection
+            title={`Retos de ${p.display_name}`}
+            challenges={allChallenges.filter((c) => c.user_id === p.id)}
+            editable={false}
+          />
+        </div>
+      ))}
     </div>
   );
 }

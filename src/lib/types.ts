@@ -5,6 +5,8 @@ export interface Profile {
   display_name: string;
   goal: string | null;
   avatar_emoji: string;
+  /** false = pauso su participacion: no aparece en el reto ni genera multas. */
+  active: boolean;
   created_at: string;
 }
 
