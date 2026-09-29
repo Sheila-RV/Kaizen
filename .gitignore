@@ -47,6 +47,7 @@ next-env.d.ts
 
 # secrets
 .supabase-token
+.vercel-token
 
 # herramientas locales de IA
 .claude-flow/
