@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
@@ -31,8 +32,14 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <span className="stat text-xs opacity-70">/{TOTAL_DAYS}</span>
           </div>
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <ThemeSwitcher initial={theme} />
+            <form action="/auth/signout" method="post">
+              <button type="submit" className="btn btn-secondary px-3" aria-label="Cerrar sesión" title="Cerrar sesión">
+                <LogOut className="size-4" aria-hidden />
+                <span className="hidden sm:inline">Salir</span>
+              </button>
+            </form>
           </div>
         </div>
 
