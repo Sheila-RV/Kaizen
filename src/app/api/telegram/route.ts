@@ -4,9 +4,12 @@ import { TOTAL_DAYS, addDays, dayNumber, todayISO } from "@/lib/challenge";
 import { appliesOn } from "@/lib/stats";
 import { tg, type ReplyMarkup, type TelegramUpdate } from "@/lib/telegram";
 import { CATEGORY_META, type Challenge } from "@/lib/types";
+import { cancelPending, handleNewButton, handleNewTitle, startNew, type Pending } from "./new-challenge";
+import { sendPauseList, togglePause } from "./pause";
 
 const HELP =
-  "Comandos:\n/hoy — tus retos de hoy\n/ayer — tus retos de ayer (día de gracia)\n/salir — desconectar este chat";
+  "Comandos:\n/hoy — tus retos de hoy\n/ayer — tus retos de ayer (día de gracia)\n/nuevo — crear un reto\n" +
+  "/pausar — pausar o reanudar un reto\n/salir — desconectar este chat";
 
 // Webhook del bot. Telegram manda cada mensaje y cada toque de boton aqui.
 // No hay sesion de usuario: se identifica por el chat vinculado y se usa el service role.
@@ -26,28 +29,39 @@ export async function POST(request: Request) {
   return new Response("ok");
 }
 
-async function linkedUserId(chatId: number): Promise<string | null> {
-  const { data } = await createAdminClient().from("telegram_links").select("user_id").eq("chat_id", chatId).maybeSingle();
-  return data?.user_id ?? null;
+async function getLink(chatId: number): Promise<{ userId: string; pending: Pending | null } | null> {
+  const { data } = await createAdminClient()
+    .from("telegram_links")
+    .select("user_id, pending")
+    .eq("chat_id", chatId)
+    .maybeSingle();
+  return data ? { userId: data.user_id, pending: data.pending as Pending | null } : null;
 }
 
 async function handleText(chatId: number, text: string) {
   const command = text.split(/[\s@]/)[0].toLowerCase();
-  const userId = await linkedUserId(chatId);
+  const link = await getLink(chatId);
 
   if (command === "/salir") {
     await createAdminClient().from("telegram_links").delete().eq("chat_id", chatId);
     return send(chatId, "Listo, este chat quedó desconectado. Mándame tu correo para volver a conectarlo.");
   }
 
-  if (!userId) {
+  if (!link) {
     if (text.includes("@") && !text.startsWith("/")) return linkByEmail(chatId, text.toLowerCase());
     return send(chatId, "¡Hola! 🔥 Soy el bot de KAIZEN.\nMándame el correo con el que entras a la app para conectar tu cuenta.");
   }
 
+  // Esperando el nombre de un reto nuevo: el texto (que no sea comando) es el nombre.
+  if (link.pending?.step === "title" && !text.startsWith("/")) return handleNewTitle(chatId, link.pending, text);
+  if (link.pending) await cancelPending(chatId);
+
   const today = todayISO();
-  if (command === "/hoy" || command === "/start") return sendDay(chatId, userId, today);
-  if (command === "/ayer") return sendDay(chatId, userId, addDays(today, -1));
+  if (command === "/hoy" || command === "/start") return sendDay(chatId, link.userId, today);
+  if (command === "/ayer") return sendDay(chatId, link.userId, addDays(today, -1));
+  if (command === "/nuevo") return startNew(chatId);
+  if (command === "/pausar" || command === "/eliminar") return sendPauseList(chatId, link.userId);
+  if (command === "/cancelar") return send(chatId, "Listo, cancelado.");
   return send(chatId, HELP);
 }
 
@@ -73,13 +87,24 @@ async function handleButton(query: NonNullable<TelegramUpdate["callback_query"]>
   const messageId = query.message?.message_id;
   if (!chatId || !messageId) return tg("answerCallbackQuery", { callback_query_id: query.id });
 
-  const userId = await linkedUserId(chatId);
-  if (!userId) {
+  const link = await getLink(chatId);
+  if (!link) {
     return tg("answerCallbackQuery", { callback_query_id: query.id, text: "Primero mándame tu correo.", show_alert: true });
   }
 
-  // callback_data: "t|<challengeId>|<fecha>" para marcar, "d|<fecha>" para cambiar de dia.
+  // callback_data: "t|<challengeId>|<fecha>" para marcar, "d|<fecha>" para cambiar de dia;
+  // el resto es del flujo de reto nuevo.
   const [kind, a, b] = (query.data ?? "").split("|");
+  if (kind === "p") {
+    const notice = await togglePause(chatId, messageId, link.userId, a);
+    return tg("answerCallbackQuery", { callback_query_id: query.id, text: notice });
+  }
+  if (kind !== "t" && kind !== "d") {
+    const notice = await handleNewButton(chatId, messageId, link.userId, link.pending, kind, a);
+    return tg("answerCallbackQuery", { callback_query_id: query.id, text: notice });
+  }
+
+  const userId = link.userId;
   let date = a;
   let notice: string | undefined;
   if (kind === "t") {
