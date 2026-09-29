@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// /api/telegram lo llama Telegram (sin sesion); se protege con su propio secreto.
+const PUBLIC_PATHS = ["/login", "/auth", "/api/telegram"];
 
 // Refresca la sesion de Supabase en cada request y manda a /login a quien no este autenticado.
 export async function proxy(request: NextRequest) {
